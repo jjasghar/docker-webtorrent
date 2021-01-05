@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tracker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracker-svc-tcp
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: tracker.DOMAIN.TLD
+  namespace: tracker
+  labels:
+    app: tracker
+spec:
+  selector:
+    app: tracker
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: tcp-8000
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracker-svc-udp
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: tracker.DOMAIN.TLD
+  namespace: tracker
+  labels:
+    app: tracker
+spec:
+  ports:
+  - port: 8000
+    protocol: UDP
+    targetPort: 8000
+    name: udp-8000
+  selector:
+    app: tracker
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker
+  namespace: tracker
+spec:
+  selector:
+    matchLabels:
+      app: tracker
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tracker
+    spec:
+      containers:
+      - name: webtorrent
+        image: quay.io/jjasghar/docker-webtorrent:1.0.0
+        ports:
+        - containerPort: 8000
